@@ -100,7 +100,13 @@ class Agent(object):
         #   - compute policy gradient loss function given actions and returns
         #   - compute gradients and step the optimizer
         #
+        discounted_returns = discount_rewards(rewards, self.gamma)
+        discounted_returns_norm = (discounted_returns - discounted_returns.mean()) / (discounted_returns.std() + 1e-8)
 
+        _, values = self.policy(states)
+        values = values.squeeze(-1)
+
+        advantages = discounted_returns_norm - values.detach()
 
         #
         # TASK 3:
@@ -110,7 +116,7 @@ class Agent(object):
         #   - compute gradients and step the optimizer
         #
 
-        return        
+        return advantages
 
 
     def get_action(self, state, evaluation=False):
