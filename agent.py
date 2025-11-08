@@ -116,7 +116,7 @@ class Agent(object):
         #   - compute gradients and step the optimizer
         #
 
-        return advantages
+        return
 
 
     def get_action(self, state, evaluation=False):

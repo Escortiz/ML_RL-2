@@ -3,6 +3,8 @@ import argparse
 
 import torch
 import gym
+from gym.wrappers import RecordVideo
+import os
 
 from env.custom_hopper import *
 from agent import Agent, Policy
@@ -20,16 +22,15 @@ args = parse_args()
 
 
 def main():
-
-	env = gym.make('CustomHopper-source-v0')
-	# env = gym.make('CustomHopper-target-v0')
+    env = gym.make('CustomHopper-source-v0')
+    # env = gym.make('CustomHopper-target-v0')
 
     video_folder = "./videos_hopper_gym021"
     os.makedirs(video_folder, exist_ok=True)  # Crear carpeta si no existe
 
-    print('State space:', env_base.observation_space)  # state-space
-    print('Action space:', env_base.action_space)  # action-space
-    print('Dynamics parameters:', env_base.get_parameters())  # masses of each link of the Hopper
+    print('State space:', env.observation_space)  # state-space
+    print('Action space:', env.action_space)  # action-space
+    print('Dynamics parameters:', env.get_parameters())  # masses of each link of the Hopper
 
     # Configuración para la grabación de video
     if args.record_video:
@@ -41,42 +42,40 @@ def main():
         # Si tu versión de gym necesita render_mode='rgb_array', ajústalo al crear el env, para poder grabar
         # Gym lo suele manejar automatico, pero si hay que especificar:
         # env_base = gym.make('CustomHopper-source-v0', render_mode='rgb_array')
-        env = RecordVideo(env_base, video_folder=args.video_folder, episode_trigger=episode_trigger,
+        env = RecordVideo(env, video_folder=args.video_folder, episode_trigger=episode_trigger,
                           name_prefix="test-agent-episode")
         print(f"Recording videos to {args.video_folder}, every {args.record_every} episode(s).")
-    else:
-        env = env_base  # No grabar video, usar el entorno base directamente
 
-	print('Action space:', env.action_space)
-	print('State space:', env.observation_space)
-	print('Dynamics parameters:', env.get_parameters())
+    print('Action space:', env.action_space)
+    print('State space:', env.observation_space)
+    print('Dynamics parameters:', env.get_parameters())
 	
-	observation_space_dim = env.observation_space.shape[-1]
-	action_space_dim = env.action_space.shape[-1]
+    observation_space_dim = env.observation_space.shape[-1]
+    action_space_dim = env.action_space.shape[-1]
 
-	policy = Policy(observation_space_dim, action_space_dim)
-	policy.load_state_dict(torch.load(args.model), strict=True)
+    policy = Policy(observation_space_dim, action_space_dim)
+    policy.load_state_dict(torch.load(args.model), strict=True)
 
-	agent = Agent(policy, device=args.device)
+    agent = Agent(policy, device=args.device)
 
-	for episode in range(args.episodes):
-		done = False
-		test_reward = 0
-		state = env.reset()
+    for episode in range(args.episodes):
+        done = False
+        test_reward = 0
+        state = env.reset()
 
-		while not done:
+        while not done:
 
-			action, _ = agent.get_action(state, evaluation=True)
+            action, _ = agent.get_action(state, evaluation=True)
 
-			state, reward, done, info = env.step(action.detach().cpu().numpy())
+            state, reward, done, info = env.step(action.detach().cpu().numpy())
 
-			if args.render:
-				env.render()
+            if args.render:
+                env.render()
 
-			test_reward += reward
+            test_reward += reward
 
-		print(f"Episode: {episode} | Return: {test_reward}")
+        print(f"Episode: {episode} | Return: {test_reward}")
 	
 
 if __name__ == '__main__':
-	main()
+    main()
