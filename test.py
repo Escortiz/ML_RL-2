@@ -24,6 +24,29 @@ def main():
 	env = gym.make('CustomHopper-source-v0')
 	# env = gym.make('CustomHopper-target-v0')
 
+    video_folder = "./videos_hopper_gym021"
+    os.makedirs(video_folder, exist_ok=True)  # Crear carpeta si no existe
+
+    print('State space:', env_base.observation_space)  # state-space
+    print('Action space:', env_base.action_space)  # action-space
+    print('Dynamics parameters:', env_base.get_parameters())  # masses of each link of the Hopper
+
+    # Configuración para la grabación de video
+    if args.record_video:
+        if not os.path.exists(args.video_folder):
+            os.makedirs(args.video_folder)
+        # Define quale episodi si registrano, si registra usando il arg record_every
+        episode_trigger = lambda episode_id: (episode_id % args.record_every == 0)
+        # Envolvemos el entorno base con RecordVideo
+        # Si tu versión de gym necesita render_mode='rgb_array', ajústalo al crear el env, para poder grabar
+        # Gym lo suele manejar automatico, pero si hay que especificar:
+        # env_base = gym.make('CustomHopper-source-v0', render_mode='rgb_array')
+        env = RecordVideo(env_base, video_folder=args.video_folder, episode_trigger=episode_trigger,
+                          name_prefix="test-agent-episode")
+        print(f"Recording videos to {args.video_folder}, every {args.record_every} episode(s).")
+    else:
+        env = env_base  # No grabar video, usar el entorno base directamente
+
 	print('Action space:', env.action_space)
 	print('State space:', env.observation_space)
 	print('Dynamics parameters:', env.get_parameters())
